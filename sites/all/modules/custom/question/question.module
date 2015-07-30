@@ -1,0 +1,90 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function question_menu() {
+  $items['question'] = array(
+    'title' => 'Questions list',
+    'page callback' => 'get_question_list',
+    'access arguments' => array('access user questions'),
+    'file' => 'question.pages.inc',
+    'type' => MENU_SUGGESTED_ITEM,
+  );
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_form_alter()
+ * Alters Drupal basic display or settings instead of directly editing in core/contributed module.
+ *
+ * @param $form
+ *   $form parameter holds all form fields.
+ * @param $form_state
+ * A keyed array containing the current state of the form. 
+ * The arguments that drupal_get_form() was originally called with are available in the array $form_state['build_info']['args']..
+ * @param $form_id
+ * String representing the name of the form itself. Typically this is the name of the function that generated the form..
+ */
+function question_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'question_node_form'){
+    if (isset($form['field_question_description'])) {
+      $form['field_question_description']['#element_validate'][] = 'custom_question_validator';
+    }
+  }
+  return $form;
+}
+
+function custom_question_validator($element, &$form_state) {
+  // Validation for Question description
+  $body = $element['und'][0]['value']['#value']; 
+  if (substr($body, -1) != "?") {
+    form_error($element, t('The "!name" must end with a "?"', array('!name' => t($body))));
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function question_theme() {
+  return array(
+    'question_row' => array(
+      'variables' => array('fields' => array()),
+      'template' => 'question-row',
+    ),
+    'question_list' => array(
+      'variables' => array('content' => NULL),
+      'template' => 'question-list',
+    ),
+  );
+}
+
+/**
+ * Process variables for question-row.tpl.php.
+ *
+ * The $variables array contains the following arguments:
+ * - $fields
+ * - $questions
+ *
+ * @see question-row.tpl.php
+ */
+function template_preprocess_question_row(&$variables) {
+  $variables['questions'] = array();
+  
+  // Provide keyed variables so themers can print each section independantly.
+  foreach ($variables['fields'] as $key) {
+    $variables['questions'] = $key;
+  }
+}
+
+/**
+ * Process variables for question-list.tpl.php.
+ *
+ * The $variables array contains the following arguments:
+ * - $content
+ *
+ * @see question-list.tpl.php
+ */
+function template_preprocess_question_list(&$variables) {
+  $variables['content'];
+}

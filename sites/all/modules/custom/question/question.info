@@ -1,0 +1,6 @@
+;$Id$
+
+name = Question Customizations
+description = All Customizations for Question Content were done here.
+core = 7.x
+package = Custom
