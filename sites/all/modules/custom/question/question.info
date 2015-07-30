@@ -3,4 +3,5 @@
 name = Question Customizations
 description = All Customizations for Question Content were done here.
 core = 7.x
+version = 7.x - 1.0.
 package = Custom

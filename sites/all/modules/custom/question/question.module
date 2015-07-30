@@ -1,4 +1,20 @@
 <?php
+
+/**
+ * @file
+ * Support for configurable Question info.
+ */
+ 
+/**
+ * Implements hook_init().
+ */
+function question_init() {
+  if (drupal_is_front_page()) {
+    // Add the CSS for this module
+    drupal_add_css(drupal_get_path('module', 'question') . '/question.css');
+  }
+}
+
 /**
  * Implements hook_menu().
  */
@@ -6,13 +22,23 @@ function question_menu() {
   $items['question'] = array(
     'title' => 'Questions list',
     'page callback' => 'get_question_list',
-    'access arguments' => array('access user questions'),
+    'access arguments' => array('view questions'),
     'file' => 'question.pages.inc',
     'type' => MENU_SUGGESTED_ITEM,
   );
   return $items;
 }
 
+/**
+ * Implements hook_permission().
+ */
+function question_permission() {
+  return array(
+    'view questions' => array(
+      'title' => t('View Questions'),
+    ),
+  );
+}
 
 /**
  * Implementation of hook_form_alter()
@@ -27,7 +53,16 @@ function question_menu() {
  * String representing the name of the form itself. Typically this is the name of the function that generated the form..
  */
 function question_form_alter(&$form, &$form_state, $form_id) {
-  if($form_id == 'question_node_form'){
+  if ($form_id == 'question_node_form') {
+    // To add custom validation to No. of Answers
+    if (isset($form['field_q_answers'])) {
+      $form['field_q_answers']['#element_validate'][] = 'custom_question_answers_count_validator';
+    }
+    // To add custom validation to No. of Views
+    if (isset($form['field_q_views'])) {
+      $form['field_q_views']['#element_validate'][] = 'custom_question_views_count_validator';
+    }
+    // To add custom validation to Question Description
     if (isset($form['field_question_description'])) {
       $form['field_question_description']['#element_validate'][] = 'custom_question_validator';
     }
@@ -35,11 +70,29 @@ function question_form_alter(&$form, &$form_state, $form_id) {
   return $form;
 }
 
+// Validator Callback - To add custom validation to Question: No. of Answers
+function custom_question_answers_count_validator($element, &$form_state) {
+  $answer_count = $element['und'][0]['value']['#value']; 
+  // Validation for Question: No. of Answers. Allow only positive integers
+  if ($answer_count < 0) {
+    form_error($element, check_plain('The Count of Answers must be positive integers'));
+  }
+}
+
+// Validator Callback - To add custom validation to Question: No. of Views
+function custom_question_views_count_validator($element, &$form_state) {
+  // Validation for Question: No. of Views. Allow only positive integers 
+  $views_count = $element['und'][0]['value']['#value'];
+  if ($views_count < 0) {
+    form_error($element, check_plain('The Count of Views must be positive integers'));
+  }
+}
+// Validator Callback - To add custom validation to Question Description
 function custom_question_validator($element, &$form_state) {
-  // Validation for Question description
+  // Validation for Question description. Check for the Question Description - Need to ends with a "?"
   $body = $element['und'][0]['value']['#value']; 
   if (substr($body, -1) != "?") {
-    form_error($element, t('The "!name" must end with a "?"', array('!name' => t($body))));
+    form_error($element, check_plain('The "!name" must end with a "?"', array('!name' => check_plain($body))));
   }
 }
 
